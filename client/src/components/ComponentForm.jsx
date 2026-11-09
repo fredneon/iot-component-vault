@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import {
+  ARCHITECTURE_SUGGESTIONS,
+  PROTOCOLS,
+  displayProtocol,
+} from "../constants/hardware.js";
 
 const CATEGORIES = ["Microcontroller", "Sensor", "Development Kit", "Other"];
 const STATUSES = ["Available", "Deployed"];
@@ -12,6 +17,10 @@ const emptyForm = {
   status: "Available",
   location: "",
   notes: "",
+  architecture: "",
+  operatingVoltage: "",
+  communicationProtocols: [],
+  datasheetUrl: "",
 };
 
 function ComponentForm({
@@ -39,6 +48,15 @@ function ComponentForm({
         status: component.status || "Available",
         location: component.location || "",
         notes: component.notes || "",
+        architecture: component.architecture || "",
+        operatingVoltage:
+          component.operatingVoltage === 0 || component.operatingVoltage
+            ? String(component.operatingVoltage)
+            : "",
+        communicationProtocols: Array.isArray(component.communicationProtocols)
+          ? component.communicationProtocols
+          : [],
+        datasheetUrl: component.datasheetUrl || "",
       });
     } else {
       setForm(emptyForm);
@@ -57,6 +75,16 @@ function ComponentForm({
       ...current,
       [name]: value,
     }));
+  };
+
+  const toggleProtocol = (protocol) => {
+    setForm((current) => {
+      const selected = current.communicationProtocols.includes(protocol)
+        ? current.communicationProtocols.filter((item) => item !== protocol)
+        : [...current.communicationProtocols, protocol];
+
+      return { ...current, communicationProtocols: selected };
+    });
   };
 
   const validate = () => {
@@ -79,6 +107,24 @@ function ComponentForm({
       nextErrors.status = "Choose a valid status.";
     }
 
+    if (form.operatingVoltage !== "") {
+      const voltage = Number(form.operatingVoltage);
+      if (!Number.isFinite(voltage) || voltage < 0) {
+        nextErrors.operatingVoltage = "Voltage must be a number of 0 or more.";
+      }
+    }
+
+    if (form.datasheetUrl.trim()) {
+      try {
+        const parsed = new URL(form.datasheetUrl.trim());
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          nextErrors.datasheetUrl = "Use an http or https URL.";
+        }
+      } catch {
+        nextErrors.datasheetUrl = "Enter a valid datasheet URL.";
+      }
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -90,7 +136,7 @@ function ComponentForm({
       return;
     }
 
-    onSubmit({
+    const payload = {
       name: form.name.trim(),
       category: form.category,
       manufacturer: form.manufacturer.trim(),
@@ -98,7 +144,22 @@ function ComponentForm({
       status: form.status,
       location: form.location.trim(),
       notes: form.notes.trim(),
-    });
+      communicationProtocols: form.communicationProtocols,
+    };
+
+    if (form.architecture.trim()) {
+      payload.architecture = form.architecture.trim();
+    }
+
+    if (form.operatingVoltage !== "") {
+      payload.operatingVoltage = Number(form.operatingVoltage);
+    }
+
+    if (form.datasheetUrl.trim()) {
+      payload.datasheetUrl = form.datasheetUrl.trim();
+    }
+
+    onSubmit(payload);
   };
 
   const title = component ? "Edit component" : "Add component";
@@ -218,6 +279,81 @@ function ComponentForm({
               />
             </label>
           </div>
+
+          <fieldset className="hardware-fieldset">
+            <legend>Hardware specifications</legend>
+            <p className="field-hint">Optional for every category.</p>
+
+            <div className="form-grid">
+              <label>
+                Microcontroller architecture
+                <input
+                  name="architecture"
+                  list="architecture-options"
+                  value={form.architecture}
+                  onChange={handleChange}
+                  placeholder="ARM Cortex-M4"
+                />
+                <datalist id="architecture-options">
+                  {ARCHITECTURE_SUGGESTIONS.map((item) => (
+                    <option key={item} value={item} />
+                  ))}
+                </datalist>
+              </label>
+
+              <label>
+                Operating voltage (V)
+                <input
+                  name="operatingVoltage"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.operatingVoltage}
+                  onChange={handleChange}
+                  placeholder="3.3"
+                />
+                {errors.operatingVoltage && (
+                  <span className="field-error">{errors.operatingVoltage}</span>
+                )}
+              </label>
+
+              <label className="full-width">
+                Datasheet URL
+                <input
+                  name="datasheetUrl"
+                  type="url"
+                  value={form.datasheetUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/datasheet.pdf"
+                />
+                {errors.datasheetUrl && (
+                  <span className="field-error">{errors.datasheetUrl}</span>
+                )}
+              </label>
+            </div>
+
+            <fieldset className="protocol-fieldset">
+              <legend>Communication protocols</legend>
+              <div className="protocol-grid">
+                {PROTOCOLS.map((protocol) => {
+                  const checked = form.communicationProtocols.includes(protocol);
+                  const id = `protocol-${protocol}`;
+
+                  return (
+                    <label key={protocol} className="protocol-chip" htmlFor={id}>
+                      <input
+                        id={id}
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleProtocol(protocol)}
+                      />
+                      {displayProtocol(protocol)}
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          </fieldset>
 
           <div className="modal-actions">
             <button type="button" className="btn ghost" onClick={onClose}>

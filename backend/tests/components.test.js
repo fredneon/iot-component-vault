@@ -150,6 +150,142 @@ describe("Component Vault API", { timeout: 180000 }, () => {
     assert.equal(response.body.message, "Invalid component ID");
   });
 
+  it("POST /api/components saves hardware metadata", async () => {
+    const response = await request(app)
+      .post("/api/components")
+      .send({
+        ...sample,
+        architecture: "Xtensa LX6",
+        operatingVoltage: 3.3,
+        communicationProtocols: ["UART", "I2C", "Wi-Fi"],
+        datasheetUrl: "https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf",
+      });
+
+    assert.equal(response.status, 201);
+    assert.equal(response.body.architecture, "Xtensa LX6");
+    assert.equal(response.body.operatingVoltage, 3.3);
+    assert.deepEqual(response.body.communicationProtocols, [
+      "UART",
+      "I2C",
+      "Wi-Fi",
+    ]);
+    assert.match(response.body.datasheetUrl, /^https:\/\//);
+  });
+
+  it("PUT /api/components/:id updates hardware metadata", async () => {
+    const created = await Component.create(sample);
+    const response = await request(app)
+      .put(`/api/components/${created._id}`)
+      .send({
+        architecture: "ARM Cortex-M4",
+        operatingVoltage: 5,
+        communicationProtocols: ["SPI", "I²C"],
+        datasheetUrl: "https://example.com/mcu.pdf",
+      });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.architecture, "ARM Cortex-M4");
+    assert.equal(response.body.operatingVoltage, 5);
+    assert.deepEqual(response.body.communicationProtocols, ["SPI", "I2C"]);
+  });
+
+  it("GET /api/components returns saved hardware metadata", async () => {
+    await Component.create({
+      ...sample,
+      architecture: "RISC-V",
+      operatingVoltage: 1.8,
+      communicationProtocols: ["GPIO", "PWM"],
+      datasheetUrl: "https://example.com/riscv.pdf",
+    });
+
+    const response = await request(app).get("/api/components");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body[0].architecture, "RISC-V");
+    assert.equal(response.body[0].operatingVoltage, 1.8);
+    assert.deepEqual(response.body[0].communicationProtocols, ["GPIO", "PWM"]);
+  });
+
+  it("GET /api/components still returns old records without metadata", async () => {
+    await Component.create(sample);
+    const response = await request(app).get("/api/components");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body[0].name, sample.name);
+    assert.equal(response.body[0].architecture, undefined);
+    assert.equal(response.body[0].operatingVoltage, undefined);
+  });
+
+  it("PUT /api/components/:id does not clear metadata on unrelated edits", async () => {
+    const created = await Component.create({
+      ...sample,
+      architecture: "AVR 8-bit",
+      operatingVoltage: 5,
+      communicationProtocols: ["UART"],
+    });
+
+    const response = await request(app)
+      .put(`/api/components/${created._id}`)
+      .send({ quantity: 9 });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.quantity, 9);
+    assert.equal(response.body.architecture, "AVR 8-bit");
+    assert.equal(response.body.operatingVoltage, 5);
+    assert.deepEqual(response.body.communicationProtocols, ["UART"]);
+  });
+
+  it("POST /api/components rejects a negative voltage", async () => {
+    const response = await request(app)
+      .post("/api/components")
+      .send({ ...sample, operatingVoltage: -3.3 });
+
+    assert.equal(response.status, 400);
+    assert.match(response.body.message, /voltage/i);
+  });
+
+  it("POST /api/components rejects an invalid datasheet URL", async () => {
+    const response = await request(app)
+      .post("/api/components")
+      .send({ ...sample, datasheetUrl: "ftp://files.example.com/chip.pdf" });
+
+    assert.equal(response.status, 400);
+    assert.match(response.body.message, /datasheet/i);
+  });
+
+  it("POST /api/components rejects an invalid communication protocol", async () => {
+    const response = await request(app)
+      .post("/api/components")
+      .send({ ...sample, communicationProtocols: ["UART", "Zigbee"] });
+
+    assert.equal(response.status, 400);
+    assert.match(response.body.message, /protocol/i);
+  });
+
+  it("POST /api/components removes duplicate protocols", async () => {
+    const response = await request(app)
+      .post("/api/components")
+      .send({
+        ...sample,
+        communicationProtocols: ["UART", "uart", "I2C", "I²C"],
+      });
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(response.body.communicationProtocols, ["UART", "I2C"]);
+  });
+
+  it("allows the Vercel origin through CORS", async () => {
+    const response = await request(app)
+      .get("/api/health")
+      .set("Origin", "https://iot-component-vault.vercel.app");
+
+    assert.equal(response.status, 200);
+    assert.equal(
+      response.headers["access-control-allow-origin"],
+      "https://iot-component-vault.vercel.app"
+    );
+  });
+
   it("allows the Vite origin through CORS", async () => {
     const response = await request(app)
       .get("/api/health")

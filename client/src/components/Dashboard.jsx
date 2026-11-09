@@ -26,6 +26,7 @@ function Dashboard() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
+  const [protocol, setProtocol] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -103,16 +104,27 @@ function Dashboard() {
     return components.filter((item) => {
       const matchesCategory = !category || item.category === category;
       const matchesStatus = !status || item.status === status;
-      const matchesSearch =
-        !query ||
-        [item.name, item.manufacturer, item.location, item.notes, item.category]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
+      const protocols = Array.isArray(item.communicationProtocols)
+        ? item.communicationProtocols
+        : [];
+      const matchesProtocol = !protocol || protocols.includes(protocol);
+      const searchText = [
+        item.name,
+        item.manufacturer,
+        item.location,
+        item.notes,
+        item.category,
+        item.architecture,
+        protocols.join(" "),
+        protocols.includes("I2C") ? "i²c i2c" : "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = !query || searchText.includes(query);
 
-      return matchesCategory && matchesStatus && matchesSearch;
+      return matchesCategory && matchesStatus && matchesProtocol && matchesSearch;
     });
-  }, [components, search, category, status]);
+  }, [components, search, category, status, protocol]);
 
   const openCreate = () => {
     setEditing(null);
@@ -263,9 +275,11 @@ function Dashboard() {
             search={search}
             category={category}
             status={status}
+            protocol={protocol}
             onSearchChange={setSearch}
             onCategoryChange={setCategory}
             onStatusChange={setStatus}
+            onProtocolChange={setProtocol}
           />
 
           <ComponentTable

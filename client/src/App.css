@@ -322,6 +322,108 @@ th {
   max-width: 220px;
 }
 
+.name-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.hardware-fieldset,
+.protocol-fieldset {
+  margin: 18px 0 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.hardware-fieldset legend,
+.protocol-fieldset legend {
+  color: var(--heading);
+  padding: 0 6px;
+}
+
+.field-hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+
+.protocol-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.protocol-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.protocol-chip input {
+  accent-color: var(--cyan);
+}
+
+.specs-row td {
+  background: rgba(94, 234, 212, 0.05);
+}
+
+.hardware-specs h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.hardware-specs dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+}
+
+.hardware-specs dt {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hardware-specs dd {
+  margin: 4px 0 0;
+}
+
+.protocol-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.protocol-badge {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.12);
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.datasheet-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cyan);
+}
+
+@media (max-width: 860px) {
+  .hardware-specs dl {
+    grid-template-columns: 1fr;
+  }
+}
+
 .low-badge,
 .status-pill {
   display: inline-flex;
@@ -366,11 +468,22 @@ th {
 
 .modal {
   width: min(680px, 100%);
+  max-height: calc(100svh - 32px);
+  display: flex;
+  flex-direction: column;
   background: #10222d;
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 20px;
   box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.modal form {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal.confirm {
@@ -416,6 +529,10 @@ th {
 .modal-actions {
   justify-content: flex-end;
   margin-top: 18px;
+  position: sticky;
+  bottom: 0;
+  padding-top: 12px;
+  background: #10222d;
 }
 
 .sidebar-scrim {

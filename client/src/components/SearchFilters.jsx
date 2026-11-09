@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { PROTOCOLS, displayProtocol } from "../constants/hardware.js";
 
 const CATEGORIES = ["Microcontroller", "Sensor", "Development Kit", "Other"];
 const STATUSES = ["Available", "Deployed"];
@@ -7,9 +8,11 @@ function SearchFilters({
   search,
   category,
   status,
+  protocol,
   onSearchChange,
   onCategoryChange,
   onStatusChange,
+  onProtocolChange,
 }) {
   return (
     <section className="filters" aria-label="Search and filters">
@@ -20,7 +23,7 @@ function SearchFilters({
           type="search"
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search name, manufacturer, location, or notes"
+          placeholder="Search name, architecture, protocol, location, or notes"
         />
       </label>
 
@@ -49,6 +52,21 @@ function SearchFilters({
           {STATUSES.map((item) => (
             <option key={item} value={item}>
               {item}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="select-field">
+        <span>Protocol</span>
+        <select
+          value={protocol}
+          onChange={(event) => onProtocolChange(event.target.value)}
+        >
+          <option value="">All protocols</option>
+          {PROTOCOLS.map((item) => (
+            <option key={item} value={item}>
+              {displayProtocol(item)}
             </option>
           ))}
         </select>

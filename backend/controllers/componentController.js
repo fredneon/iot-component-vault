@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import Component, { CATEGORIES, STATUSES } from "../models/Component.js";
+import Component, {
+  CATEGORIES,
+  DATASHEET_URL_MAX_LENGTH,
+  PROTOCOLS,
+  STATUSES,
+} from "../models/Component.js";
 
 const isNonEmptyString = (value) =>
   typeof value === "string" && value.trim().length > 0;
@@ -9,6 +14,9 @@ const isOptionalString = (value) =>
 
 const isNonNegativeInteger = (value) =>
   Number.isInteger(value) && value >= 0;
+
+const isNonNegativeNumber = (value) =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0;
 
 const invalidIdError = () => {
   const error = new Error("Invalid component ID");
@@ -36,6 +44,64 @@ const assertValidObjectId = (id) => {
   }
 };
 
+const canonicalizeProtocol = (value) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  const compact = trimmed.toLowerCase().replace(/²/g, "2").replace(/\s+/g, "");
+
+  if (compact === "i2c") {
+    return "I2C";
+  }
+
+  if (compact === "wifi" || compact === "wi-fi") {
+    return "Wi-Fi";
+  }
+
+  return PROTOCOLS.find((protocol) => protocol.toLowerCase() === trimmed.toLowerCase()) || null;
+};
+
+const normalizeProtocolList = (value) => {
+  if (!Array.isArray(value)) {
+    return { error: "Communication protocols must be an array of strings" };
+  }
+
+  const unique = [];
+  const seen = new Set();
+
+  for (const item of value) {
+    const canonical = canonicalizeProtocol(item);
+
+    if (!canonical) {
+      return {
+        error: `Communication protocol must be one of: ${PROTOCOLS.join(", ")}`,
+      };
+    }
+
+    if (!seen.has(canonical)) {
+      seen.add(canonical);
+      unique.push(canonical);
+    }
+  }
+
+  return { value: unique };
+};
+
+const isHttpUrl = (value) => {
+  if (value.length > DATASHEET_URL_MAX_LENGTH) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 const collectPayloadErrors = (body, { isUpdate = false } = {}) => {
   const errors = [];
   const {
@@ -46,6 +112,10 @@ const collectPayloadErrors = (body, { isUpdate = false } = {}) => {
     status,
     location,
     notes,
+    architecture,
+    operatingVoltage,
+    communicationProtocols,
+    datasheetUrl,
   } = body;
 
   if (!isUpdate || name !== undefined) {
@@ -80,14 +150,40 @@ const collectPayloadErrors = (body, { isUpdate = false } = {}) => {
     errors.push("Notes must be a string");
   }
 
+  if (architecture !== undefined && !isOptionalString(architecture)) {
+    errors.push("Architecture must be a string");
+  }
+
+  if (operatingVoltage !== undefined && operatingVoltage !== null && operatingVoltage !== "") {
+    const voltage = typeof operatingVoltage === "number"
+      ? operatingVoltage
+      : Number(operatingVoltage);
+
+    if (!isNonNegativeNumber(voltage)) {
+      errors.push("Operating voltage must be a non-negative number");
+    }
+  }
+
+  if (communicationProtocols !== undefined) {
+    const normalized = normalizeProtocolList(communicationProtocols);
+    if (normalized.error) {
+      errors.push(normalized.error);
+    }
+  }
+
+  if (datasheetUrl !== undefined && datasheetUrl !== "") {
+    if (!isOptionalString(datasheetUrl) || !isHttpUrl(datasheetUrl.trim())) {
+      errors.push("Datasheet URL must be a valid http or https URL");
+    }
+  }
+
   return errors;
 };
 
-const allowedFields = [
+const stringFields = [
   "name",
   "category",
   "manufacturer",
-  "quantity",
   "status",
   "location",
   "notes",
@@ -96,10 +192,35 @@ const allowedFields = [
 const pickComponentFields = (body) => {
   const data = {};
 
-  for (const field of allowedFields) {
+  for (const field of stringFields) {
     if (body[field] !== undefined) {
       data[field] = typeof body[field] === "string" ? body[field].trim() : body[field];
     }
+  }
+
+  if (body.quantity !== undefined) {
+    data.quantity = body.quantity;
+  }
+
+  if (isNonEmptyString(body.architecture)) {
+    data.architecture = body.architecture.trim();
+  }
+
+  if (body.operatingVoltage !== undefined && body.operatingVoltage !== null && body.operatingVoltage !== "") {
+    data.operatingVoltage = typeof body.operatingVoltage === "number"
+      ? body.operatingVoltage
+      : Number(body.operatingVoltage);
+  }
+
+  if (body.communicationProtocols !== undefined) {
+    const normalized = normalizeProtocolList(body.communicationProtocols);
+    if (!normalized.error) {
+      data.communicationProtocols = normalized.value;
+    }
+  }
+
+  if (isNonEmptyString(body.datasheetUrl)) {
+    data.datasheetUrl = body.datasheetUrl.trim();
   }
 
   return data;

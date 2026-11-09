@@ -9,12 +9,21 @@ export const createApp = () => {
     process.env.CLIENT_URL,
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-  ].filter(Boolean);
+    "http://127.0.0.1:5174",
+    "http://localhost:5174",
+    "https://iot-component-vault.vercel.app",
+  ]
+    .filter(Boolean)
+    .flatMap((value) => String(value).split(","))
+    .map((value) => value.trim().replace(/\/$/, ""))
+    .filter(Boolean);
 
   app.use(
     cors({
       origin(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
+        const normalizedOrigin = origin?.replace(/\/$/, "");
+
+        if (!origin || allowedOrigins.includes(normalizedOrigin)) {
           return callback(null, true);
         }
 
