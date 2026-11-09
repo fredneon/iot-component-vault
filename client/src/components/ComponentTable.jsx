@@ -123,7 +123,14 @@ function ComponentTable({
           </thead>
           <tbody>
             {components.map((component) => {
-              const isLowStock = Number(component.quantity) <= 2;
+              const quantity = Number(component.quantity) || 0;
+              const minimumStock =
+                component.minimumStock === 0 || component.minimumStock
+                  ? Number(component.minimumStock)
+                  : 5;
+              const isOutOfStock = quantity <= 0;
+              const isLowStock =
+                !isOutOfStock && quantity <= minimumStock;
               const isExpanded = expandedId === component._id;
 
               return (
@@ -131,6 +138,7 @@ function ComponentTable({
                   key={component._id}
                   component={component}
                   isLowStock={isLowStock}
+                  isOutOfStock={isOutOfStock}
                   isExpanded={isExpanded}
                   onToggle={() =>
                     setExpandedId(isExpanded ? "" : component._id)
@@ -151,6 +159,7 @@ function ComponentTable({
 function FragmentRow({
   component,
   isLowStock,
+  isOutOfStock,
   isExpanded,
   onToggle,
   onEdit,
@@ -173,6 +182,9 @@ function FragmentRow({
             </button>
             <span>
               <strong>{component.name}</strong>
+              {isOutOfStock && (
+                <span className="out-badge">Out of stock</span>
+              )}
               {isLowStock && <span className="low-badge">Low stock</span>}
             </span>
           </div>

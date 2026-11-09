@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  CircuitBoard,
-  Menu,
-  Plus,
-  RefreshCw,
-  Warehouse,
-  X,
-} from "lucide-react";
+import { useOutletContext } from "react-router-dom";
+import { Plus, RefreshCw } from "lucide-react";
 import {
   createComponent,
   deleteComponent,
@@ -19,6 +13,7 @@ import SearchFilters from "./SearchFilters.jsx";
 import ComponentTable from "./ComponentTable.jsx";
 import ComponentForm from "./ComponentForm.jsx";
 import QrModal from "./QrModal.jsx";
+import { MenuToggle } from "./AppLayout.jsx";
 
 function Dashboard() {
   const [components, setComponents] = useState([]);
@@ -35,8 +30,8 @@ function Dashboard() {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [qrComponent, setQrComponent] = useState(null);
+  const { sidebarOpen, setSidebarOpen } = useOutletContext();
 
   const loadComponents = async () => {
     setLoading(true);
@@ -64,7 +59,6 @@ function Dashboard() {
         setQrComponent(null);
         setFormOpen(false);
         setPendingDelete(null);
-        setSidebarOpen(false);
       }
     };
 
@@ -86,7 +80,12 @@ function Dashboard() {
           totals.deployedUnits += quantity;
         }
 
-        if (quantity <= 2) {
+        const minimumStock =
+          item.minimumStock === 0 || item.minimumStock
+            ? Number(item.minimumStock)
+            : 5;
+
+        if (quantity <= minimumStock) {
           totals.lowStockTypes += 1;
         }
 
@@ -196,49 +195,12 @@ function Dashboard() {
   };
 
   return (
-    <div className="app-shell">
-      {sidebarOpen && (
-        <button
-          type="button"
-          className="sidebar-scrim"
-          aria-label="Close menu"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            <CircuitBoard size={22} />
-          </span>
-          <div>
-            <p className="brand-kicker">Lab inventory</p>
-            <p className="brand-name">IoT Vault</p>
-          </div>
-        </div>
-
-        <nav aria-label="Main">
-          <a className="nav-link active" href="#inventory">
-            <Warehouse size={18} aria-hidden="true" />
-            Inventory
-          </a>
-        </nav>
-
-        <p className="sidebar-note">
-          Track boards, sensors, and kits. Low stock is quantity 2 or fewer.
-        </p>
-      </aside>
-
-      <div className="main-pane">
+    <>
         <header className="topbar">
-          <button
-            type="button"
-            className="icon-btn menu-btn"
-            onClick={() => setSidebarOpen((open) => !open)}
-            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-          >
-            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
+          <MenuToggle
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
           <div>
             <h1>Component Vault</h1>
             <p className="subtitle">Electronics lab stock, live from MongoDB.</p>
@@ -297,7 +259,6 @@ function Dashboard() {
             onShowQr={setQrComponent}
           />
         </main>
-      </div>
 
       <ComponentForm
         open={formOpen}
@@ -349,7 +310,7 @@ function Dashboard() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 

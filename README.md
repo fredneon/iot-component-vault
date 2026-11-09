@@ -19,6 +19,49 @@ Existing inventory fields are unchanged. These **optional** hardware fields can 
 
 The dashboard search matches architecture and protocols. A protocol filter sits next to category and status. Expand a table row to view hardware specifications.
 
+## Inventory analytics
+
+Open **Analytics** in the sidebar (`/analytics`). Screenshot: add a capture of the analytics page here after deploy.
+
+The API computes stats in MongoDB instead of downloading every document to the browser.
+
+Typical pipeline stages:
+
+- `$addFields` — fill missing `quantity` / `minimumStock` (default **5**) and classify stock
+- `$facet` — run totals, category groups, status groups, and alerts together
+- `$group` — collapse rows by category, stock bucket, or status
+- `$project` — rename `_id` groups into API fields
+- `$match` — keep only low-stock and out-of-stock rows
+- `$sort` — out-of-stock first, then lowest quantity
+
+`GET /api/analytics/overview` sample:
+
+```json
+{
+  "totalRecords": 3,
+  "totalUnits": 20,
+  "categoryDistribution": [
+    { "category": "Microcontroller", "recordCount": 2, "unitCount": 10 }
+  ],
+  "stockSummary": { "healthy": 1, "lowStock": 1, "outOfStock": 1 },
+  "lowStockCount": 1,
+  "outOfStockCount": 1,
+  "deploymentStatistics": {
+    "availableRecords": 2,
+    "deployedRecords": 1,
+    "unitsOnAvailableRecords": 13,
+    "unitsOnDeployedRecords": 7
+  },
+  "lowStockComponents": []
+}
+```
+
+**Records vs units:** a record is one SKU document. `quantity` is the total unit count on that record. `status` is record-level (`Available` or `Deployed`), so “deployed units” means units on Deployed records, not a split of one SKU.
+
+**Stock rules:** `quantity <= 0` out of stock; `0 < quantity <= minimumStock` low stock; otherwise healthy. Legacy documents without `minimumStock` use 5.
+
+Category / location / status filters on the analytics page are a future enhancement; inventory search filters still apply on the main table.
+
 ### Example JSON
 
 ```json
@@ -27,6 +70,7 @@ The dashboard search matches architecture and protocols. A protocol filter sits 
   "category": "Microcontroller",
   "manufacturer": "Espressif",
   "quantity": 4,
+  "minimumStock": 5,
   "status": "Available",
   "location": "Drawer A",
   "notes": "Wi-Fi + Bluetooth module",

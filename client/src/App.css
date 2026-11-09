@@ -439,6 +439,79 @@ th {
   color: var(--amber);
 }
 
+.out-badge {
+  display: inline-flex;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(251, 113, 133, 0.16);
+  color: var(--danger);
+}
+
+.tone-rose .stat-icon {
+  color: var(--danger);
+  background: rgba(251, 113, 133, 0.12);
+}
+
+.analytics-kpis {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.chart-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.chart-header,
+.metric-toggle {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.chart-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.chart-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  margin-right: 8px;
+}
+
+.active-toggle {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.banner.error {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
 .status-available {
   background: rgba(134, 239, 172, 0.14);
   color: var(--green);
@@ -540,7 +613,9 @@ th {
 }
 
 @media (max-width: 1100px) {
-  .stats-grid {
+  .stats-grid,
+  .analytics-kpis,
+  .chart-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -589,7 +664,9 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .detail-grid {
+  .detail-grid,
+  .analytics-kpis,
+  .chart-grid {
     grid-template-columns: 1fr;
   }
 

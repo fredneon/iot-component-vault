@@ -16,6 +16,7 @@ const PROTOCOLS = [
   "Other",
 ];
 const DATASHEET_URL_MAX_LENGTH = 2048;
+const DEFAULT_MINIMUM_STOCK = 5;
 
 const componentSchema = new mongoose.Schema(
   {
@@ -41,6 +42,11 @@ const componentSchema = new mongoose.Schema(
       type: Number,
       min: [0, "Quantity cannot be negative"],
       default: 0,
+    },
+    minimumStock: {
+      type: Number,
+      min: [0, "Minimum stock cannot be negative"],
+      default: DEFAULT_MINIMUM_STOCK,
     },
     status: {
       type: String,
@@ -96,5 +102,6 @@ export {
   STATUSES,
   PROTOCOLS,
   DATASHEET_URL_MAX_LENGTH,
+  DEFAULT_MINIMUM_STOCK,
 };
 export default mongoose.model("Component", componentSchema);

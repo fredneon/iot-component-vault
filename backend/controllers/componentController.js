@@ -109,6 +109,7 @@ const collectPayloadErrors = (body, { isUpdate = false } = {}) => {
     category,
     manufacturer,
     quantity,
+    minimumStock,
     status,
     location,
     notes,
@@ -136,6 +137,10 @@ const collectPayloadErrors = (body, { isUpdate = false } = {}) => {
 
   if (quantity !== undefined && !isNonNegativeInteger(quantity)) {
     errors.push("Quantity must be a non-negative integer");
+  }
+
+  if (minimumStock !== undefined && !isNonNegativeInteger(minimumStock)) {
+    errors.push("Minimum stock must be a non-negative integer");
   }
 
   if (status !== undefined && !STATUSES.includes(status)) {
@@ -200,6 +205,10 @@ const pickComponentFields = (body) => {
 
   if (body.quantity !== undefined) {
     data.quantity = body.quantity;
+  }
+
+  if (body.minimumStock !== undefined) {
+    data.minimumStock = body.minimumStock;
   }
 
   if (isNonEmptyString(body.architecture)) {

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "node --test --test-concurrency=1 tests/components.test.js tests/qr.test.js"
+    "test": "node --test --test-concurrency=1 tests/components.test.js tests/qr.test.js tests/analytics.test.js"
   },
   "keywords": [],
   "author": "",

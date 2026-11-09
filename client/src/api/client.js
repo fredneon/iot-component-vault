@@ -29,6 +29,11 @@ export const getComponent = async (id) => {
   return response.data;
 };
 
+export const getAnalyticsOverview = async () => {
+  const response = await api.get("/api/analytics/overview");
+  return response.data;
+};
+
 export const createComponent = async (payload) => {
   const response = await api.post("/api/components", payload);
   return response.data;

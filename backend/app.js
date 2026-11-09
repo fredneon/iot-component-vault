@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import componentRoutes from "./routes/componentRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 export const createApp = () => {
   const app = express();
@@ -41,6 +42,7 @@ export const createApp = () => {
   });
 
   app.use("/api/components", componentRoutes);
+  app.use("/api/analytics", analyticsRoutes);
 
   app.use((req, res) => {
     res.status(404).json({

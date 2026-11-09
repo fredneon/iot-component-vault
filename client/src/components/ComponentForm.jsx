@@ -14,6 +14,7 @@ const emptyForm = {
   category: "Microcontroller",
   manufacturer: "",
   quantity: 0,
+  minimumStock: 5,
   status: "Available",
   location: "",
   notes: "",
@@ -45,6 +46,10 @@ function ComponentForm({
         category: component.category || "Microcontroller",
         manufacturer: component.manufacturer || "",
         quantity: Number(component.quantity) || 0,
+        minimumStock:
+          component.minimumStock === 0 || component.minimumStock
+            ? Number(component.minimumStock)
+            : 5,
         status: component.status || "Available",
         location: component.location || "",
         notes: component.notes || "",
@@ -103,6 +108,12 @@ function ComponentForm({
       nextErrors.quantity = "Quantity must be a whole number of 0 or more.";
     }
 
+    const minimumStock = Number(form.minimumStock);
+    if (!Number.isInteger(minimumStock) || minimumStock < 0) {
+      nextErrors.minimumStock =
+        "Minimum stock must be a whole number of 0 or more.";
+    }
+
     if (!STATUSES.includes(form.status)) {
       nextErrors.status = "Choose a valid status.";
     }
@@ -141,6 +152,7 @@ function ComponentForm({
       category: form.category,
       manufacturer: form.manufacturer.trim(),
       quantity: Number(form.quantity),
+      minimumStock: Number(form.minimumStock),
       status: form.status,
       location: form.location.trim(),
       notes: form.notes.trim(),
@@ -231,7 +243,7 @@ function ComponentForm({
             </label>
 
             <label>
-              Quantity
+              Quantity (total units)
               <input
                 name="quantity"
                 type="number"
@@ -243,6 +255,22 @@ function ComponentForm({
               />
               {errors.quantity && (
                 <span className="field-error">{errors.quantity}</span>
+              )}
+            </label>
+
+            <label>
+              Minimum stock threshold
+              <input
+                name="minimumStock"
+                type="number"
+                min="0"
+                step="1"
+                value={form.minimumStock}
+                onChange={handleChange}
+                required
+              />
+              {errors.minimumStock && (
+                <span className="field-error">{errors.minimumStock}</span>
               )}
             </label>
 
