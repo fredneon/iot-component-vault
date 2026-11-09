@@ -274,6 +274,37 @@ describe("Component Vault API", { timeout: 180000 }, () => {
     assert.deepEqual(response.body.communicationProtocols, ["UART", "I2C"]);
   });
 
+  it("GET /api/components/:id returns a public component record", async () => {
+    const created = await Component.create({
+      ...sample,
+      notes: "Internal lab note",
+      location: "Locked cabinet",
+    });
+
+    const response = await request(app).get(`/api/components/${created._id}`);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.name, sample.name);
+    assert.equal(response.body.notes, undefined);
+    assert.equal(response.body.location, undefined);
+  });
+
+  it("GET /api/components/:id rejects an invalid id", async () => {
+    const response = await request(app).get("/api/components/not-a-valid-id");
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.message, "Invalid component ID");
+  });
+
+  it("GET /api/components/:id returns 404 after delete", async () => {
+    const created = await Component.create(sample);
+    await request(app).delete(`/api/components/${created._id}`);
+    const response = await request(app).get(`/api/components/${created._id}`);
+
+    assert.equal(response.status, 404);
+    assert.equal(response.body.message, "Component not found");
+  });
+
   it("allows the Vercel origin through CORS", async () => {
     const response = await request(app)
       .get("/api/health")

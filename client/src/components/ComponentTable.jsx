@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, FileText, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Pencil, QrCode, Trash2 } from "lucide-react";
 import { displayProtocol } from "../constants/hardware.js";
 
 function specValue(value) {
@@ -72,6 +72,7 @@ function ComponentTable({
   loadError,
   onEdit,
   onDelete,
+  onShowQr,
 }) {
   const [expandedId, setExpandedId] = useState("");
 
@@ -136,6 +137,7 @@ function ComponentTable({
                   }
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onShowQr={onShowQr}
                 />
               );
             })}
@@ -153,6 +155,7 @@ function FragmentRow({
   onToggle,
   onEdit,
   onDelete,
+  onShowQr,
 }) {
   return (
     <>
@@ -192,6 +195,14 @@ function FragmentRow({
         <td className="notes-cell">{component.notes || "—"}</td>
         <td>
           <div className="row-actions">
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => onShowQr(component)}
+              aria-label={`Show QR code for ${component.name}`}
+            >
+              <QrCode size={16} />
+            </button>
             <button
               type="button"
               className="icon-btn"

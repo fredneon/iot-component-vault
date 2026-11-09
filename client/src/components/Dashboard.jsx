@@ -18,6 +18,7 @@ import StatsCards from "./StatsCards.jsx";
 import SearchFilters from "./SearchFilters.jsx";
 import ComponentTable from "./ComponentTable.jsx";
 import ComponentForm from "./ComponentForm.jsx";
+import QrModal from "./QrModal.jsx";
 
 function Dashboard() {
   const [components, setComponents] = useState([]);
@@ -35,6 +36,7 @@ function Dashboard() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [qrComponent, setQrComponent] = useState(null);
 
   const loadComponents = async () => {
     setLoading(true);
@@ -59,6 +61,7 @@ function Dashboard() {
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
+        setQrComponent(null);
         setFormOpen(false);
         setPendingDelete(null);
         setSidebarOpen(false);
@@ -291,6 +294,7 @@ function Dashboard() {
               setDeleteError("");
               setPendingDelete(component);
             }}
+            onShowQr={setQrComponent}
           />
         </main>
       </div>
@@ -303,6 +307,8 @@ function Dashboard() {
         onClose={closeForm}
         onSubmit={handleSave}
       />
+
+      <QrModal component={qrComponent} onClose={() => setQrComponent(null)} />
 
       {pendingDelete && (
         <div className="modal-backdrop" onClick={() => setPendingDelete(null)}>

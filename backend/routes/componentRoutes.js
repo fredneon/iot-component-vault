@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getComponents,
+  getComponent,
   createComponent,
   updateComponent,
   deleteComponent,
@@ -9,6 +10,7 @@ import {
 const router = express.Router();
 
 router.get("/", getComponents);
+router.get("/:id", getComponent);
 router.post("/", createComponent);
 router.put("/:id", updateComponent);
 router.delete("/:id", deleteComponent);

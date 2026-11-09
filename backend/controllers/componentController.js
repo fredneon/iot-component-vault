@@ -226,10 +226,45 @@ const pickComponentFields = (body) => {
   return data;
 };
 
+const toPublicComponent = (doc) => {
+  const component = typeof doc.toObject === "function" ? doc.toObject() : doc;
+
+  return {
+    _id: component._id,
+    name: component.name,
+    manufacturer: component.manufacturer,
+    category: component.category,
+    quantity: component.quantity,
+    status: component.status,
+    architecture: component.architecture,
+    operatingVoltage: component.operatingVoltage,
+    communicationProtocols: component.communicationProtocols,
+    datasheetUrl: component.datasheetUrl,
+    createdAt: component.createdAt,
+    updatedAt: component.updatedAt,
+  };
+};
+
 export const getComponents = async (req, res, next) => {
   try {
     const components = await Component.find().sort({ createdAt: -1 });
     res.status(200).json(components);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getComponent = async (req, res, next) => {
+  try {
+    assertValidObjectId(req.params.id);
+
+    const component = await Component.findById(req.params.id);
+
+    if (!component) {
+      throw notFoundError();
+    }
+
+    res.status(200).json(toPublicComponent(component));
   } catch (error) {
     next(error);
   }

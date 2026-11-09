@@ -24,6 +24,11 @@ export const getComponents = async () => {
   return response.data;
 };
 
+export const getComponent = async (id) => {
+  const response = await api.get(`/api/components/${id}`);
+  return response.data;
+};
+
 export const createComponent = async (payload) => {
   const response = await api.post("/api/components", payload);
   return response.data;
